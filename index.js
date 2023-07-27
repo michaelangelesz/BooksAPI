@@ -2,6 +2,7 @@ const express = require('express')
 const mongoose = require('mongoose')
 require('dotenv').config()
 const app = express()
+const booksController = require('./controllers/books')
 
 // import routes
 app.use('/books', require('./controllers/books'))
