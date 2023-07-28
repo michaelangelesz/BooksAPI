@@ -1,75 +1,5 @@
-const express = require("express")
-const router = express.Router()
+const router = require("express").Router()
 const Book = require("../models/books")
-
-router.get("/", (req, res) => {
-  Book.find()
-    .then((books) => {
-      res.json(books)
-    })
-    .catch((err) => {
-      console.log(err)
-      res.status(500).json({ error: "Error retrieving books from database" })
-    })
-})
-
-router.get("/:id", (req, res) => {
-  Book.findById(req.params.id)
-    .then((book) => {
-      if (!book) {
-        res.status(404).json({ error: "Book not found" })
-      } else {
-        res.json(book)
-      }
-    })
-    .catch((err) => {
-      console.log(err)
-      res.status(500).json({ error: "Error retrieving book from database" })
-    })
-})
-
-router.patch("/:id", (req, res) => {
-  Book.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true },
-    (err, book) => {
-      if (err) {
-        console.log(err)
-        res.status(500).json({ error: "Error updating book in database" })
-      } else if (!book) {
-        res.status(404).json({ error: "Book not found" })
-      } else {
-        res.json(book)
-      }
-    }
-  )
-})
-
-router.delete("/:id", (req, res) => {
-  Book.findByIdAndDelete(req.params.id, (err, book) => {
-    if (err) {
-      console.log(err)
-      res.status(500).json({ error: "Error deleting book from database" })
-    } else if (!book) {
-      res.status(404).json({ error: "Book not found" })
-    } else {
-      res.json({ message: "Book deleted successfully" })
-    }
-  })
-})
-
-router.post("/", (req, res) => {
-  const book = new Book(req.body)
-  book.save((err) => {
-    if (err) {
-      console.log(err)
-      res.status(500).json({ error: "Error adding book to database" })
-    } else {
-      res.json(book)
-    }
-  })
-})
 
 router.get("/seed", (req, res) => {
   Book.insertMany([
@@ -103,7 +33,7 @@ router.get("/seed", (req, res) => {
       year: 2010,
       quantity: 4,
       imageURL: "https://imgur.com/qYLKtPH.jpeg",
-    },
+    }
   ])
     .then(
       res.status(200).json({
@@ -115,6 +45,39 @@ router.get("/seed", (req, res) => {
         message: "Seed unsuccessful",
       })
     )
+})
+
+// Get all books
+router.get("/", async (req, res) => {
+  const books = await Book.find()
+  res.json(books)
+})
+
+// Get book by id
+router.get("/:id", async (req, res) => {
+  const { id } = req.params
+  const book = await Book.findById(id)
+  res.json(book)
+})
+
+////////////UPDATE
+router.put("/:id", async (req, res) => {
+  const { id } = req.params
+  await Book.findByIdAndUpdate(id, req.body)
+  res.status(303).redirect(`/books/${id}`)
+})
+
+// Delete book
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params
+  await Book.findByIdAndDelete(id)
+  res.status(303).redirect('/books')
+})
+
+////////////CREATE
+router.post("/", async (req, res) => {
+  await Book.create(req.body)
+  res.status(303).redirect("/books")
 })
 
 module.exports = router
